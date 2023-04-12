@@ -6,37 +6,38 @@ import React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import axios from "axios";
 
 
 
-export function EditBook() {
+export function EditBook({setBooklist,booklist}) {
+  const [book, setBook] = useState(null);
   const { id } = useParams();
-  const [bookl, setBookl] = useState([]); 
-  return(
-    <div>
-      {bookl ? <EditText bookl={bookl}/> : <h1>Wait a Minute...</h1>}
-    </div>
-  );
-  }
-  // const [title, setTitle] = useState("");
-  // const [author, setAuthor] = useState("");
-  // const [summary, setSummary] = useState("");
-  // const [image, setImage] = useState("");
-  // const [rating, setRating] = useState("");
-
-function EditText({ bookl, setBookl}){
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        const [setBooklist,booklist] = useState([]);
+        setBook(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchBook();
+  }, [id]);
 
   const validationSchema = yup.object({
     title: yup
       .string()
-      .required("Name is required")
-      .min(3, "Name must be at least 3 characters long"),
-    author: yup.string().required("author is required"),
+      .required("Title is required")
+      .min(3, "Title must be at least 3 characters long"),
+    author: yup.string().required("Author is required"),
     summary: yup
       .string()
-      .required("summary is required")
-      .min(6, "summary must be at least 6 characters long"),
+      .required("Summary is required")
+      .min(6, "Summary must be at least 6 characters long"),
     image: yup.string().required("Image is required").url(),
     rating: yup.number().required("Rating is required").min(0).max(10),
   });
@@ -44,91 +45,92 @@ function EditText({ bookl, setBookl}){
   const { handleSubmit, handleChange, handleBlur, values, touched, errors } =
     useFormik({
       initialValues: {
-        title: bookl.title,
-        author: bookl.author,
-        summary: bookl.summary,
-        image: bookl.image,
-        rating: bookl.rating,
+        title: "",
+        author: "",
+        summary: "",
+        image: "",
+        rating: "",
       },
       validationSchema: validationSchema,
-      onSubmit: (newBook) => {
-        addbook(newBook);
+      onSubmit: async (updatedBook) => {
+        try {
+          const response = await axios.put(
+            `http://localhost:5173/books-list/edit/${id}`,
+            updatedBook
+          );
+          console.log(response.data);
+          navigate("/books-list");
+        } catch (error) {
+          console.error(error);
+        }
       },
     });
-    navigate("/books-list");
-  
 
-  return(
-    <form className="add-form" onSubmit={handleSubmit}>
+  if (!book) {
+    return <h1>Loading...</h1>;
+  }
+
+  return (
+    <form className="edit-form" onSubmit={handleSubmit}>
       <TextField
         helperText={touched.title && errors.title ? errors.title : null}
         variant="filled"
         id="outlined-error-helper-text"
-        label="Name"
+        label="Title"
         error={touched.title && errors.title}
         name="title"
         onBlur={handleBlur}
-        value={values.title}
+        value={values.title || book.title}
         type="text"
-        placeholder="Name"
+        placeholder="Title"
         onChange={handleChange}
       />
+
       <TextField
         helperText={touched.author && errors.author ? errors.author : null}
         variant="filled"
-        error={touched.author && errors.author}
         id="outlined-error-helper-text"
-        label="author"
+        label="Author"
+        error={touched.author && errors.author}
         name="author"
         onBlur={handleBlur}
-        value={values.author}
-        t
-        ype="text"
+        value={values.author || book.author}
+        type="text"
         placeholder="Author"
         onChange={handleChange}
       />
-      <TextField
-        helperText={touched.image && errors.image ? errors.image : null}
-        variant="filled"
-        error={touched.image && errors.image}
-        id="outlined-error-helper-text"
-        label="image"
-        name="image"
-        onBlur={handleBlur}
-        value={values.image}
-        type="text"
-        placeholder="Image"
-        onChange={handleChange}
-      />
+
       <TextField
         helperText={touched.summary && errors.summary ? errors.summary : null}
         variant="filled"
-        error={touched.summary && errors.summary}
         id="outlined-error-helper-text"
-        label="summary"
+        label="Summary"
+        error={touched.summary && errors.summary}
         name="summary"
         onBlur={handleBlur}
-        value={values.summary}
+        value={values.summary || book.summary}
         type="text"
         placeholder="Summary"
         onChange={handleChange}
-      />
+      />      
       <TextField
         helperText={touched.rating && errors.rating ? errors.rating : null}
         variant="filled"
-        error={touched.rating && errors.rating}
         id="outlined-error-helper-text"
-        label="rating"
+        label="Rating"
+        error={touched.rating && errors.rating}
         name="rating"
         onBlur={handleBlur}
         value={values.rating}
-        type="text"
+        type="number"
         placeholder="Rating"
         onChange={handleChange}
       />
-      <Button variant="contained" type="submit" onSubmit={handleSubmit}>
-        Update
+
+      <Button variant="contained" type="submit">
+        Updates
       </Button>
     </form>
-  )
+  );
 }
+
